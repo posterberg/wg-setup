@@ -4,7 +4,9 @@ It generates keypairs and complete configuration files.
 
 
 ## USAGE:
-`wg-setup.sh [OPTIONS] -n <num_clients> -ip <address> -port <port> -subnet <cidr>`
+```bash
+wg-setup.sh [OPTIONS] -n <num_clients> -ip <address> -port <port> -subnet <cidr>
+```
 
 ### REQUIRED OPTIONS:
 ```
@@ -30,30 +32,35 @@ It generates keypairs and complete configuration files.
     -h, --help          Show this help message
 ```
 
-### EXAMPLES:
+## EXAMPLES:
+### Generate server and five clients with PSK
+```bash
+wg-setup.sh -n 5 -ip vpn.example.com -port 51820 -subnet 10.100.0.0/24 -psk
 ```
-    # Generate server + 5 clients with PSK
-    wg-setup.sh -n 5 -ip vpn.example.com -port 51820 -subnet 10.100.0.0/24 -psk
 
-    # With custom DNS and split tunnel
-    wg-setup.sh -n 3 -ip 203.0.113.1 -port 51820 -subnet 10.0.0.0/24 \
+### Generate server and three clients with custom DNS and split tunnel
+```bash
+wg-setup.sh -n 3 -ip 203.0.113.1 -port 51820 -subnet 10.0.0.0/24 \
         -dns "1.1.1.1, 8.8.8.8" -allowed-ips "10.0.0.0/24, 192.168.1.0/24"
-
-    # Add 2 more clients to existing setup (auto-detected)
-    wg-setup.sh -n 2 -ip vpn.example.com -port 51820 -subnet 10.100.0.0/24 -o wg-configs
 ```
+
+### Add two more clients to existing setup (parameters loaded automatically)
+```bash
+wg-setup.sh -n 2 -o wg-configs
+```
+
 
 ## OUTPUT STRUCTURE:
 ```
     wg-configs/
     ├── server/
-    │   ├── wg0.conf      # Server configuration
+    │   ├── wg0.conf                      # Server configuration
     │   ├── privatekey                    # Server private key
     │   └── publickey                     # Server public key
     └── clients/
         ├── client_1.conf                 # Client 1 full config
-        ├── client_1_privatekey
-        ├── client_1_publickey
-        ├── client_1_psk (if -psk)
+        ├── client_1_privatekey           # Client 1 private key
+        ├── client_1_publickey            # Client 1 public key
+        ├── client_1_psk (if -psk)        # Client 1 PSK
         └── ...
 ```
