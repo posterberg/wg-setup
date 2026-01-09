@@ -33,14 +33,14 @@ It generates keypairs and complete configuration files.
 ### EXAMPLES:
 ```
     # Generate server + 5 clients with PSK
-    wg-setup (1).sh -n 5 -ip vpn.example.com -port 51820 -subnet 10.100.0.0/24 -psk
+    wg-setup.sh -n 5 -ip vpn.example.com -port 51820 -subnet 10.100.0.0/24 -psk
 
     # With custom DNS and split tunnel
-    wg-setup (1).sh -n 3 -ip 203.0.113.1 -port 51820 -subnet 10.0.0.0/24 \
+    wg-setup.sh -n 3 -ip 203.0.113.1 -port 51820 -subnet 10.0.0.0/24 \
         -dns "1.1.1.1, 8.8.8.8" -allowed-ips "10.0.0.0/24, 192.168.1.0/24"
 
     # Add 2 more clients to existing setup (auto-detected)
-    wg-setup (1).sh -n 2 -ip vpn.example.com -port 51820 -subnet 10.100.0.0/24 -o wg-configs
+    wg-setup.sh -n 2 -ip vpn.example.com -port 51820 -subnet 10.100.0.0/24 -o wg-configs
 ```
 
 ## OUTPUT STRUCTURE:
