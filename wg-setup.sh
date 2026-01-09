@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -14,11 +14,16 @@ SERVER_INTERFACE="wg0"
 ALLOWED_IPS=""
 ALLOWED_IPS_SET=false
 USE_PSK=false
+PSK_SET=false
 DNS=""
+DNS_SET=false
 NUM_CLIENTS=0
 SERVER_IP=""
+SERVER_IP_SET=false
 SERVER_PORT=""
+SERVER_PORT_SET=false
 SUBNET=""
+SUBNET_SET=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -301,24 +306,29 @@ parse_args() {
             -ip)
                 [[ -z "${2:-}" ]] && error "-ip requires an address"
                 SERVER_IP="$2"
+                SERVER_IP_SET=true
                 shift 2
                 ;;
             -port)
                 [[ -z "${2:-}" ]] && error "-port requires a port number"
                 SERVER_PORT="$2"
+                SERVER_PORT_SET=true
                 shift 2
                 ;;
             -subnet)
                 [[ -z "${2:-}" ]] && error "-subnet requires CIDR notation"
                 SUBNET="$2"
+                SUBNET_SET=true
                 shift 2
                 ;;
             -psk)
                 USE_PSK=true
+                PSK_SET=true
                 shift
                 ;;
             -dns)
                 [[ -z "${2:-}" ]] && error "-dns requires server address(es)"
+                DNS_SET=true
                 if [[ -z "$DNS" ]]; then
                     DNS="$2"
                 else
@@ -394,11 +404,11 @@ EOF
 }
 
 # Load parameters from existing config file
+# In add mode, saved values always take precedence over CLI
 load_config() {
     local config_file="${OUTPUT_DIR}/.wg-setup.conf"
     if [[ -f "$config_file" ]]; then
-        # Source the config file to load variables
-        # Only load if not already set by command line
+        # Read saved values
         local saved_server_ip saved_server_port saved_subnet saved_use_psk saved_dns saved_allowed_ips
         
         saved_server_ip=$(grep "^SERVER_IP=" "$config_file" | cut -d'"' -f2)
@@ -408,13 +418,13 @@ load_config() {
         saved_dns=$(grep "^DNS=" "$config_file" | cut -d'"' -f2)
         saved_allowed_ips=$(grep "^ALLOWED_IPS=" "$config_file" | cut -d'"' -f2)
         
-        # Use saved values if not specified on command line
-        [[ -z "$SERVER_IP" ]] && SERVER_IP="$saved_server_ip"
-        [[ -z "$SERVER_PORT" ]] && SERVER_PORT="$saved_server_port"
-        [[ -z "$SUBNET" ]] && SUBNET="$saved_subnet"
-        [[ "$USE_PSK" == false && "$saved_use_psk" == "true" ]] && USE_PSK=true
-        [[ -z "$DNS" ]] && DNS="$saved_dns"
-        [[ "$ALLOWED_IPS_SET" == false ]] && ALLOWED_IPS="$saved_allowed_ips" && ALLOWED_IPS_SET=true
+        # Always use saved values (they take precedence in add mode)
+        SERVER_IP="$saved_server_ip"
+        SERVER_PORT="$saved_server_port"
+        SUBNET="$saved_subnet"
+        [[ "$saved_use_psk" == "true" ]] && USE_PSK=true || USE_PSK=false
+        DNS="$saved_dns"
+        ALLOWED_IPS="$saved_allowed_ips"
         
         return 0
     fi
@@ -481,6 +491,20 @@ main() {
         echo "  Mode:          Adding to existing configuration"
         [[ "$config_loaded" == true ]] && echo "  Config:        Loaded from ${OUTPUT_DIR}/.wg-setup.conf"
         echo ""
+        
+        # Warn if user specified parameters that will be ignored
+        local ignored_params=()
+        [[ "$SERVER_IP_SET" == true ]] && ignored_params+=("-ip")
+        [[ "$SERVER_PORT_SET" == true ]] && ignored_params+=("-port")
+        [[ "$SUBNET_SET" == true ]] && ignored_params+=("-subnet")
+        [[ "$PSK_SET" == true ]] && ignored_params+=("-psk")
+        [[ "$DNS_SET" == true ]] && ignored_params+=("-dns")
+        [[ "$ALLOWED_IPS_SET" == true ]] && ignored_params+=("-allowed-ips")
+        
+        if [[ ${#ignored_params[@]} -gt 0 ]]; then
+            warn "Config exists, ignoring new parameters: ${ignored_params[*]}"
+            echo ""
+        fi
         
         SERVER_PUBKEY=$(cat "${OUTPUT_DIR}/server/publickey")
         
