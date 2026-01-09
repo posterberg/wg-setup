@@ -4,7 +4,7 @@ It generates keypairs and complete configuration files.
 
 
 ## USAGE:
-`wg-setup (1).sh [OPTIONS] -n <num_clients> -ip <address> -port <port> -subnet <cidr>`
+`wg-setup.sh [OPTIONS] -n <num_clients> -ip <address> -port <port> -subnet <cidr>`
 
 ### REQUIRED OPTIONS:
 ```
